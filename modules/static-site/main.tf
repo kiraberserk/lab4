@@ -38,6 +38,31 @@ resource "aws_s3_bucket" "logs" {
   bucket = "${var.project_name}-${var.environment}-logs-${data.aws_caller_identity.current.account_id}"
 }
 
+resource "aws_s3_bucket_policy" "logs" {
+  bucket = aws_s3_bucket.logs.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid    = "AllowCloudFrontLogs"
+        Effect = "Allow"
+        Principal = {
+          Service = "cloudfront.amazonaws.com"
+        }
+        Action = [
+          "s3:PutObject",
+          "s3:GetBucketAcl"
+        ]
+        Resource = [
+          aws_s3_bucket.logs.arn,
+          "${aws_s3_bucket.logs.arn}/*"
+        ]
+      }
+    ]
+  })
+}
+
 resource "aws_s3_bucket_ownership_controls" "logs" {
   bucket = aws_s3_bucket.logs.id
 
