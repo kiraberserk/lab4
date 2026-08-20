@@ -32,6 +32,11 @@ jobs:
             echo "name=stage" >> $GITHUB_OUTPUT
           fi
 
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.15.0
+
       - name: Terraform init
         run: terraform -chdir=envs/${{ steps.env.outputs.name }} init
 
