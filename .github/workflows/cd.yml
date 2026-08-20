@@ -1,0 +1,54 @@
+name: CD
+
+on:
+  push:
+    branches: [devel, stage]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm install
+      - run: npm run build
+
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: Determine environment
+        id: env
+        run: |
+          if [[ "${{ github.ref }}" == "refs/heads/devel" ]]; then
+            echo "name=devel" >> $GITHUB_OUTPUT
+          elif [[ "${{ github.ref }}" == "refs/heads/stage" ]]; then
+            echo "name=stage" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Terraform init
+        run: terraform -chdir=envs/${{ steps.env.outputs.name }} init
+
+      - name: Terraform apply
+        run: terraform -chdir=envs/${{ steps.env.outputs.name }} apply -auto-approve
+
+      - name: Get bucket and distribution
+        id: tf
+        run: |
+          cd envs/${{ steps.env.outputs.name }}
+          echo "bucket=$(terraform output -raw bucket_name 2>/dev/null || echo 'unknown')" >> $GITHUB_OUTPUT
+          echo "distribution=$(terraform output -raw cloudfront_domain)" >> $GITHUB_OUTPUT
+
+      - name: Sync build to S3
+        run: aws s3 sync build/ s3://${{ steps.tf.outputs.bucket }} --delete
+
+      - name: Invalidate CloudFront
+        run: |
+          DIST_ID=$(aws cloudfront list-distributions --query "DistributionList.Items[?DomainName=='${{ steps.tf.outputs.distribution }}'].Id" --output text)
+          aws cloudfront create-invalidation --distribution-id $DIST_ID --paths "/*"
