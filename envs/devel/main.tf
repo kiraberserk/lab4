@@ -9,7 +9,7 @@ terraform {
     bucket         = "lab-terraform-state-162557263015"
     key            = "devel/terraform.tfstate"
     region         = "us-east-2"
-    dynamodb_table = "terraform-locks"
+    use_lockfile   = true
   }
 }
 
