@@ -47,6 +47,12 @@ jobs:
         id: tf
         run: |
           cd envs/${{ steps.env.outputs.name }}
+          terraform output
+          echo "---"
+          terraform output -raw bucket_name
+          echo "---"
+          terraform output -raw cloudfront_domain
+          cd envs/${{ steps.env.outputs.name }}
           echo "bucket=$(terraform output -raw bucket_name)" >> $GITHUB_OUTPUT
           echo "distribution=$(terraform output -raw cloudfront_domain)" >> $GITHUB_OUTPUT
 
