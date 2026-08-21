@@ -47,8 +47,19 @@ jobs:
         id: tf
         run: |
           cd envs/${{ steps.env.outputs.name }}
-          echo "bucket=$(terraform output -raw bucket_name)" >> $GITHUB_OUTPUT
-          echo "distribution=$(terraform output -raw cloudfront_domain)" >> $GITHUB_OUTPUT
+          echo "=== Terraform outputs ==="
+          terraform output
+          echo "=== bucket_name ==="
+          terraform output -raw bucket_name
+          echo
+          echo "=== cloudfront_domain ==="
+          terraform output -raw cloudfront_domain
+          echo
+          echo "=== Writing GitHub outputs ==="
+          bucket=$(terraform output -raw bucket_name)
+          distribution=$(terraform output -raw cloudfront_domain)
+          printf 'bucket=%s\n' "$bucket" >> "$GITHUB_OUTPUT"
+          printf 'distribution=%s\n' "$distribution" >> "$GITHUB_OUTPUT"
 
       - name: Sync build to S3
         run: aws s3 sync build/ s3://${{ steps.tf.outputs.bucket }} --delete
