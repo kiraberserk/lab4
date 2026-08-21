@@ -162,15 +162,5 @@ resource "aws_s3_bucket_policy" "site" {
   })
 }
 
-output "cloudfront_domain" {
-  value = aws_cloudfront_distribution.site.domain_name
-}
-
 data "aws_caller_identity" "current" {}
 
-output "logs_bucket" {
-  value = aws_s3_bucket.logs.id
-}
-output "bucket_name" {
-  value = aws_s3_bucket.site.id
-}
