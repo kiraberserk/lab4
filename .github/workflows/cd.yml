@@ -47,10 +47,9 @@ jobs:
         id: tf
         run: |
           cd envs/${{ steps.env.outputs.name }}
-          BUCKET=$(terraform output -raw bucket_name 2>/dev/null)
-          DIST=$(terraform output -raw cloudfront_domain 2>/dev/null)
-          echo "bucket=${BUCKET}" >> $GITHUB_OUTPUT
-          echo "distribution=${DIST}" >> $GITHUB_OUTPUT
+          OUTPUTS=$(terraform output -json)
+          echo "bucket=$(echo $OUTPUTS | jq -r .bucket_name.value)" >> $GITHUB_OUTPUT
+          echo "distribution=$(echo $OUTPUTS | jq -r .cloudfront_domain.value)" >> $GITHUB_OUTPUT
 
       - name: Sync build to S3
         run: aws s3 sync build/ s3://${{ steps.tf.outputs.bucket }} --delete
