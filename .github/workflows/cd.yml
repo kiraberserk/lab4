@@ -47,7 +47,7 @@ jobs:
         id: tf
         run: |
           cd envs/${{ steps.env.outputs.name }}
-          echo "bucket=$(terraform output -raw bucket_name 2>/dev/null || echo 'unknown')" >> $GITHUB_OUTPUT
+          echo "bucket=$(terraform output -raw bucket_name)" >> $GITHUB_OUTPUT
           echo "distribution=$(terraform output -raw cloudfront_domain)" >> $GITHUB_OUTPUT
 
       - name: Sync build to S3
